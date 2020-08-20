@@ -1,3 +1,4 @@
+# Written by: Tray Harris
 # Code adapated from Gaven MacDonald's Matrix Keypad for Raspberry Pi tutorial
 # https://www.youtube.com/watch?v=yYnX5QodqQ4
 
@@ -36,4 +37,5 @@ try:
                 
                 GPIO.output(col[j], 1)
 except KeyboardInterrupt:
-    GPIO.cleanup()
+    GPIO.cleanup(row)
+    GPIO.cleanup(col)
