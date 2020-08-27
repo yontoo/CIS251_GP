@@ -1,4 +1,4 @@
-from RPi.GPIO import Button, MotionSensor
+import RPi.GPIO as GPIO
 from picamera import PiCamera
 from time import sleep
 from signal import pause
