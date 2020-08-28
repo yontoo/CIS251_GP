@@ -48,9 +48,6 @@ col = [23,24,25]
 reed = 14
 pir = 4
 
-#Function threads
-
-
 #set up pins for use, start disarmed
 def setup():
     global first_time
@@ -72,10 +69,10 @@ def setup():
     #Setup Row Pins of matrix keypad
     for i in range(4):
         GPIO.setup(row[i], GPIO.IN, pull_up_down = GPIO.PUD_UP)
-    
+
     camera.resolution = (1024, 768)
-        
-    #Setup function thread   
+
+    #Setup function thread
     keypad_thread = threading.Thread(target=keypad)
 
     #Start keypad thread
@@ -141,8 +138,9 @@ def reset_pass():
                         choosing = False
             print("\nEnter new 4 digit code (1-9) and press 0 to enter: ", end='')
         time.sleep(0.1)
-        
+
 #alarm, turn on alarm led, record, notify etc
+#PIR Motion Sensor research: Luis
 def sys_armed():
     global tripped, armed
     has_printed= False
@@ -188,7 +186,7 @@ def keypad():
                         pass
                     pressed = False
                     curr_num = 15
-            
+
             GPIO.output(col[j], 1)
     return
 
@@ -200,7 +198,7 @@ Press 1 to arm
 Press 2 to reset code
 Press 3 to turn off system
     """)
-    
+
 def main():
     global running, armed
     print_menu()
@@ -208,7 +206,7 @@ def main():
         if curr_num == 1:
             if(validate()):
                 armed = True
-                sys_arm_thread = threading.Thread(target=sys_armed) 
+                sys_arm_thread = threading.Thread(target=sys_armed)
                 sys_arm_thread.start()
                 print("System armed.")
         #reset passcode
