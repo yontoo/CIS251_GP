@@ -2,5 +2,5 @@
 Repo for CIS251 Group Porject
 
 By:
-Tray Harris
+Tray Harris<br/>
 Luis Lopez-Rangel
