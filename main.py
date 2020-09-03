@@ -18,6 +18,9 @@ import threading
 from configparser import ConfigParser as cp
 import sys
 from picamera import PiCamera
+import busio
+import board
+import adafruit_character_lcd.character_lcd_i2c as character_lcd_i2c
 
 
 GPIO.setmode(GPIO.BCM)
@@ -25,7 +28,6 @@ GPIO.setmode(GPIO.BCM)
 armed = False
 tripped = False
 running = True
-first_time = False
 pressed = False
 config_file = cp()
 config_file.read('./config.ini')
@@ -34,6 +36,10 @@ images_path = "/home/pi/CIS251/CIS251_GP/images"
 curr_num = 15
 code = ''
 camera = PiCamera()
+lcd_col = 16
+lcd_row = 2
+i2c = busio.I2C(board.SCL, board.SDA)
+lcd = character_lcd_i2c.Character_LCD_I2C(i2c, lcd_col, lcd_row, address=0x27)
 
 
 #2d array for matrix keypad
@@ -50,13 +56,6 @@ pir = 4
 
 #set up pins for use, start disarmed
 def setup():
-    global first_time
-
-    #Check config.ini, if stored code is 0 then its the first time running
-    config_file.read('./config.ini')
-    if (config_file['PASSCODE']['code']) == '0':
-        first_time = True
-
     #Setup pin for reed switch and PIR motion sensor
     GPIO.setup(reed, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(pir, GPIO.IN)
@@ -70,6 +69,7 @@ def setup():
     for i in range(4):
         GPIO.setup(row[i], GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
+    #Setup Camera resolution
     camera.resolution = (1024, 768)
 
     #Setup function thread
@@ -77,6 +77,15 @@ def setup():
 
     #Start keypad thread
     keypad_thread.start()
+
+    #Clear lcd screen
+    lcd.clear()
+
+# def lcd_write():
+#     while (running):
+#         if (armed):
+#             lcd.message = "System Armed"
+#         elif not (armed):
 
 
 #verify keypad input and arm
