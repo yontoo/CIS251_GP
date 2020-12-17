@@ -17,10 +17,10 @@ import time
 import threading
 from configparser import ConfigParser as cp
 import sys
+import os
 from picamera import PiCamera
-import busio
 import board
-import adafruit_character_lcd.character_lcd_i2c as character_lcd_i2c
+import I2C_LCD_driver
 
 
 GPIO.setmode(GPIO.BCM)
@@ -36,10 +36,7 @@ images_path = "/home/pi/CIS251/CIS251_GP/images"
 curr_num = 15
 code = ''
 camera = PiCamera()
-lcd_col = 16
-lcd_row = 2
-i2c = busio.I2C(board.SCL, board.SDA)
-lcd = character_lcd_i2c.Character_LCD_I2C(i2c, lcd_col, lcd_row, address=0x27)
+mylcd = I2C_LCD_driver.lcd()
 
 
 #2d array for matrix keypad
@@ -78,29 +75,46 @@ def setup():
     #Start keypad thread
     keypad_thread.start()
 
-    #Clear lcd screen
-    lcd.clear()
+    # #Setup LCD arm thread
+    lcd_thread = threading.Thread(target=lcd_write)
 
-# def lcd_write():
-#     while (running):
-#         if (armed):
-#             lcd.message = "System Armed"
-#         elif not (armed):
+    #Start LCD arm thread
+    lcd_thread.start()
+
+def lcd_write():
+    while (running):
+        
+        while(tripped):
+            mylcd.lcd_display_string("Alarm Tripped!", 1)
+            time.sleep(1)
+            mylcd.lcd_clear()
+            time.sleep(1)
+        if (armed):
+            mylcd.lcd_display_string("System Armed     ", 1)
+        elif not (armed):
+            mylcd.lcd_display_string("System Unarmed", 1)
+    return
 
 
 #verify keypad input and arm
 def validate():
     global code
-    print("\nEnter 4 digit code: ", end='')
+    if (tripped):
+        print("\nEnter 4 digit code: ", end='')
+    else:
+        print("\nEnter 4 digit code (Press 0 to Cancel): ", end='')
     while (True):
 
         if (pressed and curr_num != 0):
             code += str(curr_num)
             print(curr_num, end='')
         if (curr_num == 0 or len(code) == 4):
-            if (len(code) < 4):
-                print("\nEntered code too short. Try again.")
+            if (curr_num == 0 and not tripped):
+                print("\nCancelling.")
                 code = ''
+                time.sleep(1)
+                print_menu()
+                return False
             else:
                 config_file.read('./config.ini')
                 if (code == str(config_file['PASSCODE']['code'])):
@@ -200,6 +214,7 @@ def keypad():
     return
 
 def print_menu():
+    os.system("clear")
     print("""
 Menu
 -----------------
@@ -230,6 +245,7 @@ def main():
             running = False
         time.sleep(0.1)
     if not (running):
+        mylcd.lcd_clear()
         sys.exit()
 
 setup()
